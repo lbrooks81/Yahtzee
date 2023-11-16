@@ -3,34 +3,27 @@
  * South Hills Username: [lbrooks81]
  */
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
  public class Main
     {
         public static Scanner input = new Scanner(System.in);
-        public static int diceOneValue = 0;
-        public static int diceTwoValue = 0;
-        public static int diceThreeValue = 0;
-        public static int diceFourValue = 0;
-        public static int diceFiveValue = 0;
-        public static boolean oneHasBeenUsed = false;
-        public static boolean twoHasBeenUsed = false;
-        public static boolean threeHasBeenUsed = false;
-        public static boolean fourHasBeenUsed = false;
-        public static boolean fiveHasBeenUsed = false;
-        public static boolean sixHasBeenUsed = false;
+        public static boolean[] categoryIsChosen = new boolean[8];
+        public static String[] categoryNames =
+                {
+                        "Ones", "Twos", "Threes", "Fours", "Fives", "Sixes", "Chance", "Yahtzee"
+                };
         public static int playerScore = 0;
         public static void main(String[] args)
         {
-            System.out.println("---------Yahtzee!---------");
-            wait(1000);
-            while(!outOfCategories())
-            {
+           while(!outOfCategories())
+           {
                 logicLoop();
-            }
-            System.out.println("You ran out of categories to choose, ending the game. Your final score was: " + playerScore);
-            while(playAgain() )
+           }
+           System.out.println("You ran out of categories to choose, ending the game. Your final score was: " + playerScore);
+           while(playAgain() )
             {
                 while(!outOfCategories())
                 {
@@ -46,12 +39,39 @@ import java.util.Scanner;
                 System.out.println("Thanks for playing!");
             }
         }
+        public static void printInstructions()
+        {
+            System.out.println("---------Yahtzee!---------");
+            wait(1000);
+            System.out.println("5 dice will be rolled. When you choose to stop, you will pick a category.");
+            wait(2000);
+            System.out.println("This will add the total of all dice sharing that category number. ");
+            wait(2000);
+            System.out.println("You cannot use the same category twice and are limited to three rolls before you must choose a category");
+            wait(2000);
+            System.out.println("Additionally, you can type 7 to call Chance, which will add the total of all dice together.");
+            wait(2000);
+            System.out.println("If all 5 dice are the same value, type 8 to call Yahtzee, which will add 50 points to your score.");
+            wait(2000);
+        }
         public static boolean outOfCategories()
         {
-            return oneHasBeenUsed  && twoHasBeenUsed && threeHasBeenUsed && fourHasBeenUsed && fiveHasBeenUsed && sixHasBeenUsed;
+            for(int i = 0; i < categoryIsChosen.length; i++)
+            {
+                if(!categoryIsChosen[i])
+                {
+                    return false;
+                }
+            }
+            return true;
         }
-        public static boolean playerChoice()
+        public static boolean playerChoice(int rollNumber)
         {
+            if(rollNumber == 3)
+            {
+                System.out.println("You ran out of rolls and now must choose a category.");
+                return false;
+            }
             System.out.print("If you would like to stop rolling and choose a category, type \"stop\", or type \"roll\" to roll again: ");
             String choice = input.nextLine();
             while(!choice.equalsIgnoreCase("stop") && !choice.equalsIgnoreCase("roll"))
@@ -64,20 +84,38 @@ import java.util.Scanner;
         }
         public static void logicLoop()
         {
+            int YAHTZEE_CALL = 8;
+            int CHANCE_CALL = 7;
             boolean reroll = true;
             int numberOfRolls = 0;
+            int[]diceValues = new int[5];
             while(numberOfRolls < 3 && reroll)
             {
-                rollDice();
-                wait(1000);
                 numberOfRolls++;
-                reroll = playerChoice();
+                diceValues = rollDice(numberOfRolls);
+                wait(1000);
+                reroll = playerChoice(numberOfRolls);
             }
-            if(numberOfRolls == 3 && reroll)
+            int categoryChoice = categoryChoice();
+            for(int i = 0; i < 7; i++)
             {
-                System.out.println("You ran out of rolls and now must choose a category.");
+                if(categoryIsChosen[i])
+                {
+                    categoryIsChosen[7] = true;
+                }
             }
-            getPlayerScore(categoryChoice());
+            if(categoryChoice == CHANCE_CALL)
+            {
+                chanceCheck(diceValues);
+            }
+            if(categoryChoice == YAHTZEE_CALL)
+            {
+                yahtzeeCheck(diceValues);
+            }
+            if(categoryChoice <= 6)
+            {
+                getPlayerScore(categoryChoice, diceValues);
+            }
         }
         public static void wait(int ms)
         {
@@ -90,57 +128,57 @@ import java.util.Scanner;
                 //Thread.currentThread().interrupt();
             }
         }
-        public static void rollDice()
+        public static int[]rollDice(int rollNumber)
         {
+
+            System.out.println("Roll "+ rollNumber +": ");
             Random rand = new Random();
-            diceOneValue = rand.nextInt(1,7);
-            System.out.print(diceOneValue+", ");
-            diceTwoValue = rand.nextInt(1,7);
-            System.out.print(diceTwoValue+", ");
-            diceThreeValue = rand.nextInt(1,7);
-            System.out.print(diceThreeValue+", ");
-            diceFourValue = rand.nextInt(1,7);
-            System.out.print(diceFourValue+", ");
-            diceFiveValue = rand.nextInt(1,7);
-            System.out.print(diceFiveValue+". ");
+            int[]diceValues = new int[5];
+            String diceAsString = "";
+            for(int i = 0; i < (diceValues.length); i++)
+            {
+                diceValues[i] = rand.nextInt(1,7);
+                diceAsString += diceValues[i] + ", ";
+            }
+            diceAsString = diceAsString.substring(0, diceAsString.length() - 2);
+            System.out.println(diceAsString);
+            return diceValues;
+        }
+        public static void chanceCheck(int[]diceValues)
+        {
+            int subtotal = 0;
+            // int sum = Arrays.stream(diceValues).sum();
+            for(int diceValue : diceValues)
+            {
+                subtotal += diceValue;
+            }
+            playerScore += subtotal;
+            System.out.println(subtotal + " added to score. Your total score is " + playerScore);
+            categoryIsChosen[7] = true;
+        }
+        public static void yahtzeeCheck(int[]diceValues)
+        {
+            final int YAHTZEE_SCORE = 50;
+            for(int i = 0; i < diceValues.length; i++)
+            {
+                if(diceValues[4] != diceValues[i])
+                {
+                    System.out.println("Not a Yahtzee, nice try tho.");
+                    return;
+                }
+
+            }
+            playerScore += YAHTZEE_SCORE;
+            System.out.println("Yahtzee! You gain 50 points. Your total is now " + playerScore);
+            categoryIsChosen[6] = true;
         }
         public static int categoryChoice()
         {
             System.out.print("Enter the number for the category you would like to use: ");
             int categoryNumber = input.nextInt();
-            while(categoryNumber == 1 && oneHasBeenUsed)
+            while(categoryIsChosen[(categoryNumber - 1)])
             {
-                System.out.println("This category has already been picked. ");
-                System.out.print("Enter the number for the category you would like to use: ");
-                categoryNumber = input.nextInt();
-            }
-            while(categoryNumber == 2 && twoHasBeenUsed)
-            {
-                System.out.println("This category has already been picked. ");
-                System.out.print("Enter the number for the category you would like to use: ");
-                categoryNumber = input.nextInt();
-            }
-            while(categoryNumber == 3 && threeHasBeenUsed)
-            {
-                System.out.println("This category has already been picked. ");
-                System.out.print("Enter the number for the category you would like to use: ");
-                categoryNumber = input.nextInt();
-            }
-            while(categoryNumber == 4 && fourHasBeenUsed)
-            {
-                System.out.println("This category has already been picked. ");
-                System.out.print("Enter the number for the category you would like to use: ");
-                categoryNumber = input.nextInt();
-            }
-            while(categoryNumber == 5 && fiveHasBeenUsed)
-            {
-                System.out.println("This category has already been picked. ");
-                System.out.print("Enter the number for the category you would like to use: ");
-                categoryNumber = input.nextInt();
-            }
-            while(categoryNumber == 6 && sixHasBeenUsed)
-            {
-                System.out.println("This category has already been picked. ");
+                System.out.println(categoryNames[(categoryNumber - 1)] + " category has already been picked. ");
                 System.out.print("Enter the number for the category you would like to use: ");
                 categoryNumber = input.nextInt();
             }
@@ -151,58 +189,34 @@ import java.util.Scanner;
                 categoryNumber = input.nextInt();
             }
             input.nextLine();
-            switch(categoryNumber)
+            if(categoryNumber < 9)
             {
-                case 1:
-                    oneHasBeenUsed = true;
-                    return 1;
-                case 2:
-                    twoHasBeenUsed = true;
-                    return 2;
-                case 3:
-                    threeHasBeenUsed = true;
-                    return 3;
-                case 4:
-                    fourHasBeenUsed = true;
-                    return 4;
-                case 5:
-                    fiveHasBeenUsed = true;
-                    return 5;
-                default:
-                    sixHasBeenUsed = true;
-                    return 6;
+                categoryIsChosen[(categoryNumber - 1)] = true;
             }
+            return categoryNumber;
         }
+
         public static boolean categoryValidation(int catChoice)
         {
-            return catChoice != 1 && catChoice != 2 && catChoice != 3 && catChoice != 4 && catChoice != 5 && catChoice != 6;
+            if(catChoice > 9)
+            {
+                return true;
+            }
+            return false;
         }
-        public static void getPlayerScore(int categoryChoice)
+        public static void getPlayerScore(int categoryChoice, int[]diceValues)
         {
             int subtotal = 0;
-            if(diceOneValue == categoryChoice)
+            for(int i = 0; i < diceValues.length; i++)
             {
-                subtotal += categoryChoice;
+                if(diceValues[i] == categoryChoice)
+                {
+                    subtotal += categoryChoice;
+                }
             }
-            if(diceTwoValue == categoryChoice)
-            {
-                subtotal += categoryChoice;
-            }
-            if(diceThreeValue == categoryChoice)
-            {
-                subtotal += categoryChoice;
-            }
-            if(diceFourValue == categoryChoice)
-            {
-                subtotal += categoryChoice;
-            }
-            if(diceFiveValue == categoryChoice)
-            {
-                subtotal += categoryChoice;
-            }
-                playerScore += subtotal;
-                System.out.println(subtotal + " added to total since "+ translateNumberToCard(categoryChoice) +  " category was used. Your total score is " + playerScore);
-            }
+            playerScore += subtotal;
+            System.out.println(subtotal + " added to total since "+ translateNumberToCard(categoryChoice) +  " category was used. Your total score is " + playerScore);
+        }
         public static String translateNumberToCard (int catChoice)
         {
             return switch(catChoice)
@@ -222,12 +236,10 @@ import java.util.Scanner;
             String confirmation = input.nextLine();
             if(confirmation.equalsIgnoreCase("yes"))
             {
-                oneHasBeenUsed = false;
-                twoHasBeenUsed = false;
-                threeHasBeenUsed = false;
-                fourHasBeenUsed = false;
-                fiveHasBeenUsed = false;
-                sixHasBeenUsed = false;
+                for(int i = 0; i < categoryIsChosen.length; i++)
+                {
+                    categoryIsChosen[i] = false;
+                }
                 playerScore = 0;
                 return true;
             }

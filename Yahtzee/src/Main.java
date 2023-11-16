@@ -176,20 +176,20 @@ import java.util.Scanner;
         {
             System.out.print("Enter the number for the category you would like to use: ");
             int categoryNumber = input.nextInt();
-            while(categoryIsChosen[(categoryNumber - 1)])
-            {
-                System.out.println(categoryNames[(categoryNumber - 1)] + " category has already been picked. ");
-                System.out.print("Enter the number for the category you would like to use: ");
-                categoryNumber = input.nextInt();
-            }
             while(categoryValidation(categoryNumber))
             {
                 System.out.println("Invalid input.");
                 System.out.print("Enter the number for the category you would like to use: ");
                 categoryNumber = input.nextInt();
             }
+            while(categoryIsChosen[(categoryNumber - 1)])
+            {
+                System.out.println(categoryNames[(categoryNumber - 1)] + " category has already been picked. ");
+                System.out.print("Enter the number for the category you would like to use: ");
+                categoryNumber = input.nextInt();
+            }
             input.nextLine();
-            if(categoryNumber < 9)
+            if(categoryNumber < categoryNames.length + 1)
             {
                 categoryIsChosen[(categoryNumber - 1)] = true;
             }
@@ -198,11 +198,7 @@ import java.util.Scanner;
 
         public static boolean categoryValidation(int catChoice)
         {
-            if(catChoice > 9)
-            {
-                return true;
-            }
-            return false;
+            return catChoice > 9;
         }
         public static void getPlayerScore(int categoryChoice, int[]diceValues)
         {
